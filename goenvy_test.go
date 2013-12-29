@@ -104,7 +104,9 @@ func TestStringVar(t *testing.T) {
 			t.Errorf("values should not be defined until parse is called: value was %q", actual)
 		}
 
-		ParseFromEnv(testingEnv)
+		env := &PrefixEnv{prefix: test.prefix, Env: testingEnv}
+
+		ParseFromEnv(env)
 
 		if actual != test.expected {
 			t.Errorf("Expected key %q to have value %q, but got %q", test.key, test.expected, actual)
