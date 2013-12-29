@@ -55,13 +55,13 @@ func TestStringVar(t *testing.T) {
 			description:  "test for lowercase env (case sensitive)",
 			key:          "host",
 			defaultValue: "default value",
-			expected:     "host",
+			expected:     "lowercase host",
 		},
 		{
 			description:  "test for uppercase env (case sensitive)",
 			key:          "HOST",
 			defaultValue: "default value",
-			expected:     "HOST",
+			expected:     "UPPERCASE HOST",
 		},
 		{
 			description:  "test for missing key with prefix",
@@ -71,18 +71,25 @@ func TestStringVar(t *testing.T) {
 			expected:     "default value",
 		},
 		{
-			description:  "test for case insensitivity of key with prefix",
+			description:  "test for lowercase key with prefix",
 			prefix:       "appname_",
 			key:          "host",
 			defaultValue: "default value",
-			expected:     "appname_host",
+			expected:     "prefix host",
+		},
+		{
+			description:  "test for mixed case of key with prefix",
+			prefix:       "appname_",
+			key:          "HOST",
+			defaultValue: "default value",
+			expected:     "prefix HOST",
 		},
 		{
 			description:  "test for case matching of key with prefix",
 			prefix:       "APPNAME_",
 			key:          "HOST",
 			defaultValue: "default value",
-			expected:     "APPNAME_HOST",
+			expected:     "PREFIX HOST",
 		},
 	}
 
@@ -139,6 +146,13 @@ func TestIntVar(t *testing.T) {
 			key:          "not_available",
 			defaultValue: 1337,
 			expected:     1337,
+		},
+		{
+			description:  "test for lowercase key with prefix",
+			prefix:       "appname_",
+			key:          "port",
+			defaultValue: 1337,
+			expected:     1234,
 		},
 		{
 			description:  "test for case insensitivity of key with prefix",
