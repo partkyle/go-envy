@@ -47,6 +47,7 @@ type IntTest struct {
 func TestStringVar(t *testing.T) {
 	// create some consts so the tests are easier to read
 	const (
+		defaultValue = "default value"
 		host         = "lowercase host"
 		HOST         = "UPPERCASE HOST"
 		appname_host = "prefix host"
@@ -66,47 +67,47 @@ func TestStringVar(t *testing.T) {
 		{
 			description:  "test for default value when missing",
 			key:          "this_value_does_not_exist",
-			defaultValue: "default value",
-			expected:     "default value",
+			defaultValue: defaultValue,
+			expected:     defaultValue,
 		},
 		{
 			description:  "test for lowercase env (case sensitive)",
 			key:          "host",
-			defaultValue: "default value",
+			defaultValue: defaultValue,
 			expected:     host,
 		},
 		{
 			description:  "test for uppercase env (case sensitive)",
 			key:          "HOST",
-			defaultValue: "default value",
+			defaultValue: defaultValue,
 			expected:     HOST,
 		},
 		{
 			description:  "test for missing key with prefix",
 			prefix:       "appname_",
 			key:          "not_available",
-			defaultValue: "default value",
-			expected:     "default value",
+			defaultValue: defaultValue,
+			expected:     defaultValue,
 		},
 		{
 			description:  "test for lowercase key with prefix",
 			prefix:       "appname_",
 			key:          "host",
-			defaultValue: "default value",
+			defaultValue: defaultValue,
 			expected:     appname_host,
 		},
 		{
 			description:  "test for mixed case of key with prefix",
 			prefix:       "appname_",
 			key:          "HOST",
-			defaultValue: "default value",
+			defaultValue: defaultValue,
 			expected:     appname_HOST,
 		},
 		{
 			description:  "test for UPPERCASE key with prefix",
 			prefix:       "APPNAME_",
 			key:          "HOST",
-			defaultValue: "default value",
+			defaultValue: defaultValue,
 			expected:     APPNAME_HOST,
 		},
 	}
