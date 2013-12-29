@@ -15,6 +15,15 @@ func (s simpleEnv) GetString(key string) string {
 	}
 }
 
+func (s simpleEnv) GetInt(key string) int {
+	switch val := s[key].(type) {
+	case int:
+		return val
+	default:
+		return 0
+	}
+}
+
 type StringTest struct {
 	description string
 
@@ -36,12 +45,21 @@ type IntTest struct {
 }
 
 func TestStringVar(t *testing.T) {
+	// create some consts so the tests are easier to read
+	const (
+		host         = "lowercase host"
+		HOST         = "UPPERCASE HOST"
+		appname_host = "prefix host"
+		appname_HOST = "prefix HOST"
+		APPNAME_HOST = "PREFIX HOST"
+	)
+
 	testingEnv := simpleEnv{
-		"host":         "lowercase host",
-		"HOST":         "UPPERCASE HOST",
-		"appname_host": "prefix host",
-		"appname_HOST": "prefix HOST",
-		"APPNAME_HOST": "PREFIX HOST",
+		"host":         host,
+		"HOST":         HOST,
+		"appname_host": appname_host,
+		"appname_HOST": appname_HOST,
+		"APPNAME_HOST": APPNAME_HOST,
 	}
 
 	tests := []StringTest{
@@ -55,13 +73,13 @@ func TestStringVar(t *testing.T) {
 			description:  "test for lowercase env (case sensitive)",
 			key:          "host",
 			defaultValue: "default value",
-			expected:     "lowercase host",
+			expected:     host,
 		},
 		{
 			description:  "test for uppercase env (case sensitive)",
 			key:          "HOST",
 			defaultValue: "default value",
-			expected:     "UPPERCASE HOST",
+			expected:     HOST,
 		},
 		{
 			description:  "test for missing key with prefix",
@@ -75,21 +93,21 @@ func TestStringVar(t *testing.T) {
 			prefix:       "appname_",
 			key:          "host",
 			defaultValue: "default value",
-			expected:     "prefix host",
+			expected:     appname_host,
 		},
 		{
 			description:  "test for mixed case of key with prefix",
 			prefix:       "appname_",
 			key:          "HOST",
 			defaultValue: "default value",
-			expected:     "prefix HOST",
+			expected:     appname_HOST,
 		},
 		{
-			description:  "test for case matching of key with prefix",
+			description:  "test for UPPERCASE key with prefix",
 			prefix:       "APPNAME_",
 			key:          "HOST",
 			defaultValue: "default value",
-			expected:     "PREFIX HOST",
+			expected:     APPNAME_HOST,
 		},
 	}
 
@@ -104,71 +122,82 @@ func TestStringVar(t *testing.T) {
 			t.Errorf("values should not be defined until parse is called: value was %q", actual)
 		}
 
+		// wrap the testing env in a PrefixEnv
 		env := &PrefixEnv{prefix: test.prefix, Env: testingEnv}
 
 		ParseFromEnv(env)
 
 		if actual != test.expected {
-			t.Errorf("Expected key %q to have value %q, but got %q", test.key, test.expected, actual)
+			t.Errorf("Expected key %q to have value %q, but got %q", test.prefix+test.key, test.expected, actual)
 		}
 	}
 }
 
 func TestIntVar(t *testing.T) {
+	// create some consts so this will be easier to read
+	const (
+		defaultValue = 13337
+		port         = 9000
+		PORT         = 10000
+		appname_port = 1234
+		appname_PORT = 654321
+		APPNAME_PORT = 8675309
+	)
+
 	testingEnv := simpleEnv{
-		"port":         9000,
-		"PORT":         10000,
-		"appname_port": 1234,
-		"appname_PORT": 654321,
-		"APPNAME_PORT": 8675309,
+		"port":         port,
+		"PORT":         PORT,
+		"appname_port": appname_port,
+		"appname_PORT": appname_PORT,
+		"APPNAME_PORT": APPNAME_PORT,
 	}
 
 	tests := []IntTest{
 		{
 			description:  "test for default value when missing",
 			key:          "this_value_does_not_exist",
-			defaultValue: 1337,
-			expected:     1337,
+			defaultValue: defaultValue,
+			expected:     defaultValue,
 		},
 		{
 			description:  "test for lowercase env (case sensitive)",
 			key:          "port",
-			defaultValue: 1337,
-			expected:     9000,
+			defaultValue: defaultValue,
+			expected:     port,
 		},
 		{
 			description:  "test for uppercase env (case sensitive)",
 			key:          "PORT",
-			defaultValue: 1337,
-			expected:     10000,
+			defaultValue: defaultValue,
+			expected:     PORT,
 		},
 		{
 			description:  "test for missing key with prefix",
 			prefix:       "appname_",
 			key:          "not_available",
-			defaultValue: 1337,
-			expected:     1337,
+			defaultValue: defaultValue,
+			expected:     defaultValue,
 		},
 		{
 			description:  "test for lowercase key with prefix",
 			prefix:       "appname_",
 			key:          "port",
-			defaultValue: 1337,
-			expected:     1234,
+			defaultValue: defaultValue,
+			expected:     appname_port,
 		},
 		{
-			description:  "test for case insensitivity of key with prefix",
+			description:  "test for mixed case of key with prefix",
 			prefix:       "appname_",
-			key:          "port",
-			defaultValue: 1337,
-			expected:     654321,
+			key:          "PORT",
+			defaultValue: defaultValue,
+			expected:     appname_PORT,
 		},
 		{
-			description:  "test for case matching of key with prefix",
+			description:  "test for UPPERCASE key with prefix",
 			prefix:       "APPNAME_",
 			key:          "PORT",
-			defaultValue: 1337,
-			expected:     8675309,
+			defaultValue: defaultValue,
+			expected:     APPNAME_PORT,
 		},
 	}
 
@@ -183,10 +212,13 @@ func TestIntVar(t *testing.T) {
 			t.Errorf("values should not be defined until parse is called: value was %d", actual)
 		}
 
-		ParseFromEnv(testingEnv)
+		// wrap the testing env in a PrefixEnv
+		env := &PrefixEnv{prefix: test.prefix, Env: testingEnv}
+
+		ParseFromEnv(env)
 
 		if actual != test.expected {
-			t.Errorf("Expected key %q to have value %d, but got %d", test.key, test.expected, actual)
+			t.Errorf("Expected key %q to have value %d, but got %d", test.prefix+test.key, test.expected, actual)
 		}
 	}
 }
