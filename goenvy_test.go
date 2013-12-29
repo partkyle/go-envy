@@ -134,11 +134,12 @@ func TestIntVar(t *testing.T) {
 	)
 
 	testingEnv := simpleEnv{
-		"port":         fmt.Sprintf("%d", port),
-		"PORT":         fmt.Sprintf("%d", PORT),
-		"appname_port": fmt.Sprintf("%d", appname_port),
-		"appname_PORT": fmt.Sprintf("%d", appname_PORT),
-		"APPNAME_PORT": fmt.Sprintf("%d", APPNAME_PORT),
+		"port":           fmt.Sprintf("%d", port),
+		"PORT":           fmt.Sprintf("%d", PORT),
+		"appname_port":   fmt.Sprintf("%d", appname_port),
+		"appname_PORT":   fmt.Sprintf("%d", appname_PORT),
+		"APPNAME_PORT":   fmt.Sprintf("%d", APPNAME_PORT),
+		"broken_integer": "asdf",
 	}
 
 	tests := []IntTest{
@@ -187,6 +188,12 @@ func TestIntVar(t *testing.T) {
 			key:          "PORT",
 			defaultValue: defaultValue,
 			expected:     APPNAME_PORT,
+		},
+		{
+			description:  "test for an unparsable integer",
+			key:          "broken_integer",
+			defaultValue: defaultValue,
+			expected:     defaultValue,
 		},
 	}
 

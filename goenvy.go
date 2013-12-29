@@ -19,13 +19,13 @@ type Var struct {
 // in StringVar, IntVar, etc
 var vars = make([]*Var, 0)
 
-// Sets the value of the provided string when Parse is called
+// Sets the value of the referenced string when Parse is called
 func StringVar(s *string, key string, value string) {
 	v := &Var{key: key, value: value, ref: s}
 	vars = append(vars, v)
 }
 
-// Sets the value of the references int when Parse is called
+// Sets the value of the referenced int when Parse is called
 func IntVar(i *int, key string, value int) {
 	v := &Var{key: key, value: value, ref: i}
 	vars = append(vars, v)
