@@ -19,29 +19,6 @@ type Var struct {
 // in StringVar, IntVar, etc
 var vars = make([]*Var, 0)
 
-// Interface that refers to the environment
-// in which config values are stored
-type Env interface {
-	GetString(string) string
-	GetInt(string) int
-}
-
-// Simple type to wrap an existing Env implementation,
-// and call all methods with a prefix
-// Note: this is very useful for the tests
-type PrefixEnv struct {
-	prefix string
-	Env
-}
-
-func (p *PrefixEnv) GetString(key string) string {
-	return p.Env.GetString(p.prefix + key)
-}
-
-func (p *PrefixEnv) GetInt(key string) int {
-	return p.Env.GetInt(p.prefix + key)
-}
-
 // Sets the value of the provided string when Parse is called
 func StringVar(s *string, key string, value string) {
 	v := &Var{key: key, value: value, ref: s}
@@ -67,8 +44,8 @@ func ParseFromEnv(env Env) error {
 	for _, v := range vars {
 		switch t := v.ref.(type) {
 		case *string:
-			envVal := env.GetString(v.key)
-			if envVal == "" {
+			envVal, err := env.GetString(v.key)
+			if err != nil {
 				// type assertion required here to reuse struct, if for some reason it fails
 				// we fall back to the default value.
 				// tests will assure that this is not going to cause problems
@@ -78,8 +55,8 @@ func ParseFromEnv(env Env) error {
 			}
 			*t = envVal
 		case *int:
-			envVal := env.GetInt(v.key)
-			if envVal == 0 {
+			envVal, err := env.GetInt(v.key)
+			if err != nil {
 				// type assertion required here to reuse struct, if for some reason it fails
 				// we fall back to the default value.
 				// tests will assure that this is not going to cause problems

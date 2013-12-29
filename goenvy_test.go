@@ -1,27 +1,14 @@
 package goenvy
 
 import (
+	"fmt"
 	"testing"
 )
 
-type simpleEnv map[string]interface{}
+type simpleEnv map[string]string
 
-func (s simpleEnv) GetString(key string) string {
-	switch val := s[key].(type) {
-	case string:
-		return val
-	default:
-		return ""
-	}
-}
-
-func (s simpleEnv) GetInt(key string) int {
-	switch val := s[key].(type) {
-	case int:
-		return val
-	default:
-		return 0
-	}
+func (s simpleEnv) Get(key string) string {
+	return s[key]
 }
 
 type StringTest struct {
@@ -124,7 +111,8 @@ func TestStringVar(t *testing.T) {
 		}
 
 		// wrap the testing env in a PrefixEnv
-		env := &PrefixEnv{prefix: test.prefix, Env: testingEnv}
+
+		env := &PrefixEnv{prefix: test.prefix, Env: &ParsingEnv{testingEnv}}
 
 		ParseFromEnv(env)
 
@@ -146,11 +134,11 @@ func TestIntVar(t *testing.T) {
 	)
 
 	testingEnv := simpleEnv{
-		"port":         port,
-		"PORT":         PORT,
-		"appname_port": appname_port,
-		"appname_PORT": appname_PORT,
-		"APPNAME_PORT": APPNAME_PORT,
+		"port":         fmt.Sprintf("%d", port),
+		"PORT":         fmt.Sprintf("%d", PORT),
+		"appname_port": fmt.Sprintf("%d", appname_port),
+		"appname_PORT": fmt.Sprintf("%d", appname_PORT),
+		"APPNAME_PORT": fmt.Sprintf("%d", APPNAME_PORT),
 	}
 
 	tests := []IntTest{
@@ -214,7 +202,7 @@ func TestIntVar(t *testing.T) {
 		}
 
 		// wrap the testing env in a PrefixEnv
-		env := &PrefixEnv{prefix: test.prefix, Env: testingEnv}
+		env := &PrefixEnv{prefix: test.prefix, Env: &ParsingEnv{testingEnv}}
 
 		ParseFromEnv(env)
 
