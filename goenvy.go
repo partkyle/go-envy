@@ -31,6 +31,12 @@ func IntVar(i *int, key string, value int) {
 	vars = append(vars, v)
 }
 
+// Sets the value of the referenced bool when Parse is called
+func BoolVar(i *bool, key string, value bool) {
+	v := &Var{key: key, value: value, ref: i}
+	vars = append(vars, v)
+}
+
 // Entry point for the configuration
 // Defaults to an Env parser that uses os.Getenv
 func Parse() error {
@@ -61,6 +67,17 @@ func ParseFromEnv(env Env) error {
 				// we fall back to the default value.
 				// tests will assure that this is not going to cause problems
 				if value, ok := v.value.(int); ok {
+					envVal = value
+				}
+			}
+			*t = envVal
+		case *bool:
+			envVal, err := env.GetBool(v.key)
+			if err != nil {
+				// type assertion required here to reuse struct, if for some reason it fails
+				// we fall back to the default value.
+				// tests will assure that this is not going to cause problems
+				if value, ok := v.value.(bool); ok {
 					envVal = value
 				}
 			}

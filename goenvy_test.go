@@ -21,16 +21,6 @@ type StringTest struct {
 	expected     string
 }
 
-type IntTest struct {
-	description string
-
-	prefix string
-	key    string
-
-	defaultValue int
-	expected     int
-}
-
 func TestStringVar(t *testing.T) {
 	// create some consts so the tests are easier to read
 	const (
@@ -52,46 +42,46 @@ func TestStringVar(t *testing.T) {
 
 	tests := []StringTest{
 		{
-			description:  "test for default value when missing",
+			description:  "default value when missing",
 			key:          "this_value_does_not_exist",
 			defaultValue: defaultValue,
 			expected:     defaultValue,
 		},
 		{
-			description:  "test for lowercase env (case sensitive)",
+			description:  "lowercase env (case sensitive)",
 			key:          "host",
 			defaultValue: defaultValue,
 			expected:     host,
 		},
 		{
-			description:  "test for uppercase env (case sensitive)",
+			description:  "uppercase env (case sensitive)",
 			key:          "HOST",
 			defaultValue: defaultValue,
 			expected:     HOST,
 		},
 		{
-			description:  "test for missing key with prefix",
+			description:  "missing key with prefix",
 			prefix:       "appname_",
 			key:          "not_available",
 			defaultValue: defaultValue,
 			expected:     defaultValue,
 		},
 		{
-			description:  "test for lowercase key with prefix",
+			description:  "lowercase key with prefix",
 			prefix:       "appname_",
 			key:          "host",
 			defaultValue: defaultValue,
 			expected:     appname_host,
 		},
 		{
-			description:  "test for mixed case of key with prefix",
+			description:  "mixed case of key with prefix",
 			prefix:       "appname_",
 			key:          "HOST",
 			defaultValue: defaultValue,
 			expected:     appname_HOST,
 		},
 		{
-			description:  "test for UPPERCASE key with prefix",
+			description:  "UPPERCASE key with prefix",
 			prefix:       "APPNAME_",
 			key:          "HOST",
 			defaultValue: defaultValue,
@@ -122,6 +112,16 @@ func TestStringVar(t *testing.T) {
 	}
 }
 
+type IntTest struct {
+	description string
+
+	prefix string
+	key    string
+
+	defaultValue int
+	expected     int
+}
+
 func TestIntVar(t *testing.T) {
 	// create some consts so this will be easier to read
 	const (
@@ -144,53 +144,53 @@ func TestIntVar(t *testing.T) {
 
 	tests := []IntTest{
 		{
-			description:  "test for default value when missing",
+			description:  "default value when missing",
 			key:          "this_value_does_not_exist",
 			defaultValue: defaultValue,
 			expected:     defaultValue,
 		},
 		{
-			description:  "test for lowercase env (case sensitive)",
+			description:  "lowercase env (case sensitive)",
 			key:          "port",
 			defaultValue: defaultValue,
 			expected:     port,
 		},
 		{
-			description:  "test for uppercase env (case sensitive)",
+			description:  "uppercase env (case sensitive)",
 			key:          "PORT",
 			defaultValue: defaultValue,
 			expected:     PORT,
 		},
 		{
-			description:  "test for missing key with prefix",
+			description:  "missing key with prefix",
 			prefix:       "appname_",
 			key:          "not_available",
 			defaultValue: defaultValue,
 			expected:     defaultValue,
 		},
 		{
-			description:  "test for lowercase key with prefix",
+			description:  "lowercase key with prefix",
 			prefix:       "appname_",
 			key:          "port",
 			defaultValue: defaultValue,
 			expected:     appname_port,
 		},
 		{
-			description:  "test for mixed case of key with prefix",
+			description:  "mixed case of key with prefix",
 			prefix:       "appname_",
 			key:          "PORT",
 			defaultValue: defaultValue,
 			expected:     appname_PORT,
 		},
 		{
-			description:  "test for UPPERCASE key with prefix",
+			description:  "UPPERCASE key with prefix",
 			prefix:       "APPNAME_",
 			key:          "PORT",
 			defaultValue: defaultValue,
 			expected:     APPNAME_PORT,
 		},
 		{
-			description:  "test for an unparsable integer",
+			description:  "an unparsable integer",
 			key:          "broken_integer",
 			defaultValue: defaultValue,
 			expected:     defaultValue,
@@ -217,4 +217,86 @@ func TestIntVar(t *testing.T) {
 			t.Errorf("Expected key %q to have value %d, but got %d", test.prefix+test.key, test.expected, actual)
 		}
 	}
+}
+
+type BoolTest struct {
+	description string
+
+	prefix string
+	key    string
+
+	defaultValue bool
+	expected     bool
+}
+
+func TestBoolVar(t *testing.T) {
+	const (
+		debug         = true
+		DEBUG         = true
+		appname_debug = true
+	)
+
+	testingEnv := simpleEnv{
+		"debug":            fmt.Sprintf("%v", debug),
+		"DEBUG":            fmt.Sprintf("%v", DEBUG),
+		"appname_debug":    fmt.Sprintf("%v", appname_debug),
+		"falsy_value":      "false",
+		"unparsable_value": "moo",
+	}
+
+	tests := []BoolTest{
+		{
+			description:  "default value when missing: false",
+			key:          "this_value_does_not_exist",
+			defaultValue: false,
+			expected:     false,
+		},
+		{
+			description:  "default value when missing: true",
+			key:          "this_value_does_not_exist",
+			defaultValue: true,
+			expected:     true,
+		},
+		{
+			description:  "lowercase env (case sensitive)",
+			key:          "debug",
+			defaultValue: false,
+			expected:     debug,
+		},
+		{
+			description:  "uppercase env (case sensitive)",
+			key:          "DEBUG",
+			defaultValue: false,
+			expected:     DEBUG,
+		},
+		{
+			description:  "missing key with prefix",
+			prefix:       "appname_",
+			key:          "not_available",
+			defaultValue: true,
+			expected:     true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Log(test.description)
+
+		// this is the actual API
+		var actual bool
+		BoolVar(&actual, test.key, test.defaultValue)
+
+		if actual != false {
+			t.Errorf("values should not be defined until parse is called: value was %v", actual)
+		}
+
+		// wrap the testing env in a PrefixEnv
+		env := &PrefixEnv{prefix: test.prefix, Env: &ParsingEnv{testingEnv}}
+
+		ParseFromEnv(env)
+
+		if actual != test.expected {
+			t.Errorf("Expected key %q to have value %v, but got %v", test.prefix+test.key, test.expected, actual)
+		}
+	}
+
 }
