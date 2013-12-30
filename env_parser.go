@@ -2,12 +2,13 @@ package goenvy
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"strconv"
 )
 
 var (
-	ErrStringEnvNotDefined = errors.New("empty string value was returned")
-	ErrBoolNotParsable     = errors.New("bool string not parsable")
+	ErrStringEnvNotDefined = errors.New("empty string value")
 )
 
 // Interface that refers to the environment
@@ -64,7 +65,7 @@ func (p *ParsingEnv) GetBool(key string) (bool, error) {
 	case "false":
 		return false, nil
 	default:
-		return false, ErrBoolNotParsable
+		return false, fmt.Errorf("bool string %q not parsable", value)
 	}
 }
 
@@ -82,4 +83,10 @@ func (p *PrefixEnv) GetString(key string) (string, error) {
 
 func (p *PrefixEnv) GetInt(key string) (int, error) {
 	return p.Env.GetInt(p.prefix + key)
+}
+
+type OsEnvironParser struct{}
+
+func (o *OsEnvironParser) Get(key string) string {
+	return os.Getenv(key)
 }

@@ -13,6 +13,9 @@ type Var struct {
 	key   string
 	value interface{}
 	ref   interface{}
+
+	// store the error in case we want to dump it out later
+	err error
 }
 
 // reference to store all variables that are given
@@ -40,7 +43,9 @@ func BoolVar(i *bool, key string, value bool) {
 // Entry point for the configuration
 // Defaults to an Env parser that uses os.Getenv
 func Parse() error {
-	return nil
+	env := &OsEnvironParser{}
+	parsingEnv := &ParsingEnv{env}
+	return ParseFromEnv(parsingEnv)
 }
 
 // Parse from a specific environment interface
@@ -51,6 +56,7 @@ func ParseFromEnv(env Env) error {
 		switch t := v.ref.(type) {
 		case *string:
 			envVal, err := env.GetString(v.key)
+			v.err = err
 			if err != nil {
 				// type assertion required here to reuse struct, if for some reason it fails
 				// we fall back to the default value.
@@ -62,6 +68,7 @@ func ParseFromEnv(env Env) error {
 			*t = envVal
 		case *int:
 			envVal, err := env.GetInt(v.key)
+			v.err = err
 			if err != nil {
 				// type assertion required here to reuse struct, if for some reason it fails
 				// we fall back to the default value.
@@ -73,6 +80,7 @@ func ParseFromEnv(env Env) error {
 			*t = envVal
 		case *bool:
 			envVal, err := env.GetBool(v.key)
+			v.err = err
 			if err != nil {
 				// type assertion required here to reuse struct, if for some reason it fails
 				// we fall back to the default value.
@@ -89,4 +97,12 @@ func ParseFromEnv(env Env) error {
 		}
 	}
 	return nil
+}
+
+func DumpErrors() {
+	for _, v := range vars {
+		if v.err != nil {
+			logger.Printf("error on var %q: %s", v.key, v.err)
+		}
+	}
 }
