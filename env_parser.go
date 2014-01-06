@@ -1,9 +1,7 @@
 package goenvy
 
 import (
-	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -26,51 +24,6 @@ type Env interface {
 }
 
 type SimpleEnv map[string]string
-
-type ParsingEnv struct {
-	SimpleEnv
-}
-
-// returns a string from the underlying env
-// TODO: determine what exactly the error means
-func (p *ParsingEnv) GetString(key string) (string, error) {
-	value, ok := p.SimpleEnv[key]
-	if !ok {
-		return "", fmt.Errorf("missing key=%s; value=string", key)
-	}
-
-	return value, nil
-}
-
-// returns an int from the underlying env
-// error is returned when it is not a valid integer
-func (p *ParsingEnv) GetInt(key string) (int, error) {
-	value, ok := p.SimpleEnv[key]
-	if !ok {
-		return 0, fmt.Errorf("missing key=%s; value=int", key)
-	}
-
-	return strconv.Atoi(value)
-}
-
-// returns an int from the underlying env
-// error is returned when it is not a valid bool
-// Expects either "true" or "false"
-func (p *ParsingEnv) GetBool(key string) (bool, error) {
-	value, ok := p.SimpleEnv[key]
-	if !ok {
-		return false, fmt.Errorf("missing key=%s; value=bool", key)
-	}
-
-	switch value {
-	case "true":
-		return true, nil
-	case "false":
-		return false, nil
-	default:
-		return false, fmt.Errorf("missing key=%s; value=bool", key)
-	}
-}
 
 // Simple type to wrap an existing Env implementation,
 // and call all methods with a prefix
