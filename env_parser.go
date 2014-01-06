@@ -85,7 +85,7 @@ func (p *PrefixEnv) GetInt(key string) (int, error) {
 	return p.Env.GetInt(p.prefix + key)
 }
 
-func (p *PrefixEnv) GetBool(key string) (int, error) {
+func (p *PrefixEnv) GetBool(key string) (bool, error) {
 	return p.Env.GetBool(p.prefix + key)
 }
 
