@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-type simpleEnv map[string]string
-
-func (s simpleEnv) Get(key string) string {
-	return s[key]
-}
-
 type StringTest struct {
 	description string
 
@@ -32,7 +26,7 @@ func TestStringVar(t *testing.T) {
 		APPNAME_HOST = "PREFIX HOST"
 	)
 
-	testingEnv := simpleEnv{
+	testingEnv := SimpleEnv{
 		"host":         host,
 		"HOST":         HOST,
 		"appname_host": appname_host,
@@ -133,7 +127,7 @@ func TestIntVar(t *testing.T) {
 		APPNAME_PORT = 8675309
 	)
 
-	testingEnv := simpleEnv{
+	testingEnv := SimpleEnv{
 		"port":           fmt.Sprintf("%d", port),
 		"PORT":           fmt.Sprintf("%d", PORT),
 		"appname_port":   fmt.Sprintf("%d", appname_port),
@@ -236,7 +230,7 @@ func TestBoolVar(t *testing.T) {
 		appname_debug = true
 	)
 
-	testingEnv := simpleEnv{
+	testingEnv := SimpleEnv{
 		"debug":            fmt.Sprintf("%v", debug),
 		"DEBUG":            fmt.Sprintf("%v", DEBUG),
 		"appname_debug":    fmt.Sprintf("%v", appname_debug),

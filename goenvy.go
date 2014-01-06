@@ -43,7 +43,7 @@ func BoolVar(i *bool, key string, value bool) {
 // Entry point for the configuration
 // Defaults to an Env parser that uses os.Getenv
 func Parse() error {
-	env := &OsEnvironParser{}
+	env := ReadFromOsEnv()
 	parsingEnv := &ParsingEnv{env}
 	return ParseFromEnv(parsingEnv)
 }

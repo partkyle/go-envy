@@ -1,14 +1,10 @@
 package goenvy
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
-)
-
-var (
-	ErrStringEnvNotDefined = errors.New("empty string value")
+	"strings"
 )
 
 // Interface that refers to the environment
@@ -29,9 +25,7 @@ type Env interface {
 	GetBool(string) (bool, error)
 }
 
-type SimpleEnv interface {
-	Get(string) string
-}
+type SimpleEnv map[string]string
 
 type ParsingEnv struct {
 	SimpleEnv
@@ -40,17 +34,22 @@ type ParsingEnv struct {
 // returns a string from the underlying env
 // TODO: determine what exactly the error means
 func (p *ParsingEnv) GetString(key string) (string, error) {
-	value := p.Get(key)
-	if value == "" {
-		return "", ErrStringEnvNotDefined
+	value, ok := p.SimpleEnv[key]
+	if !ok {
+		return "", fmt.Errorf("missing key=%s; value=string", key)
 	}
+
 	return value, nil
 }
 
 // returns an int from the underlying env
 // error is returned when it is not a valid integer
 func (p *ParsingEnv) GetInt(key string) (int, error) {
-	value := p.Get(key)
+	value, ok := p.SimpleEnv[key]
+	if !ok {
+		return 0, fmt.Errorf("missing key=%s; value=int", key)
+	}
+
 	return strconv.Atoi(value)
 }
 
@@ -58,20 +57,23 @@ func (p *ParsingEnv) GetInt(key string) (int, error) {
 // error is returned when it is not a valid bool
 // Expects either "true" or "false"
 func (p *ParsingEnv) GetBool(key string) (bool, error) {
-	value := p.Get(key)
+	value, ok := p.SimpleEnv[key]
+	if !ok {
+		return false, fmt.Errorf("missing key=%s; value=bool", key)
+	}
+
 	switch value {
 	case "true":
 		return true, nil
 	case "false":
 		return false, nil
 	default:
-		return false, fmt.Errorf("bool string %q not parsable", value)
+		return false, fmt.Errorf("missing key=%s; value=bool", key)
 	}
 }
 
 // Simple type to wrap an existing Env implementation,
 // and call all methods with a prefix
-// Note: this is very useful for the tests
 type PrefixEnv struct {
 	prefix string
 	Env
@@ -89,8 +91,12 @@ func (p *PrefixEnv) GetBool(key string) (bool, error) {
 	return p.Env.GetBool(p.prefix + key)
 }
 
-type OsEnvironParser struct{}
+func ReadFromOsEnv() SimpleEnv {
+	result := make(SimpleEnv)
+	for _, envVar := range os.Environ() {
+		parts := strings.SplitN(envVar, "=", 2)
+		result[parts[0]] = parts[1]
+	}
 
-func (o *OsEnvironParser) Get(key string) string {
-	return os.Getenv(key)
+	return result
 }
