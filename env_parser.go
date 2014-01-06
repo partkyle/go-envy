@@ -85,6 +85,10 @@ func (p *PrefixEnv) GetInt(key string) (int, error) {
 	return p.Env.GetInt(p.prefix + key)
 }
 
+func (p *PrefixEnv) GetBool(key string) (int, error) {
+	return p.Env.GetBool(p.prefix + key)
+}
+
 type OsEnvironParser struct{}
 
 func (o *OsEnvironParser) Get(key string) string {
