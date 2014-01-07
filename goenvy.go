@@ -92,3 +92,22 @@ func (o *OsEnvironmentReader) Read() map[string]string {
 
 	return result
 }
+
+type IniEnvironmentReader struct {
+	filename string
+}
+
+func (i *IniEnvironmentReader) Read() map[string]string {
+	// read file
+
+	result := make(map[string]string)
+
+	// ignore headers
+	// ie [kamta.config]
+
+	// ignore lines that start with "#"
+
+	// split on strings.SplitN(envVar, "=", 2)
+
+	return result
+}
