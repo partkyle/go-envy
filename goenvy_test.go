@@ -5,292 +5,51 @@ import (
 	"testing"
 )
 
-type StringTest struct {
-	description string
+type TestSimpleEnv map[string]string
 
-	prefix string
-	key    string
-
-	defaultValue string
-	expected     string
+func (t TestSimpleEnv) Read() map[string]string {
+	return map[string]string(t)
 }
 
-func TestStringVar(t *testing.T) {
-	// create some consts so the tests are easier to read
-	const (
-		defaultValue = "default value"
-		host         = "lowercase host"
-		HOST         = "UPPERCASE HOST"
-		appname_host = "prefix host"
-		appname_HOST = "prefix HOST"
-		APPNAME_HOST = "PREFIX HOST"
-	)
+func TestConfigFromSimpleEnv(t *testing.T) {
+	expectedHost := "thepark"
+	expectedPort := 4242
+	expectedDebug := true
+	expectedQuit := false
 
-	testingEnv := SimpleEnv{
-		"host":         host,
-		"HOST":         HOST,
-		"appname_host": appname_host,
-		"appname_HOST": appname_HOST,
-		"APPNAME_HOST": APPNAME_HOST,
+	env := TestSimpleEnv{
+		"HOST":     expectedHost,
+		"USERNAME": "mordecai",
+		"PORT":     fmt.Sprintf("%d", expectedPort),
+		"QUIT":     fmt.Sprintf("%v", expectedQuit),
+		"DEBUG":    fmt.Sprintf("%v", expectedDebug),
 	}
 
-	tests := []StringTest{
-		{
-			description:  "default value when missing",
-			key:          "this_value_does_not_exist",
-			defaultValue: defaultValue,
-			expected:     defaultValue,
-		},
-		{
-			description:  "lowercase env (case sensitive)",
-			key:          "host",
-			defaultValue: defaultValue,
-			expected:     host,
-		},
-		{
-			description:  "uppercase env (case sensitive)",
-			key:          "HOST",
-			defaultValue: defaultValue,
-			expected:     HOST,
-		},
-		{
-			description:  "missing key with prefix",
-			prefix:       "appname_",
-			key:          "not_available",
-			defaultValue: defaultValue,
-			expected:     defaultValue,
-		},
-		{
-			description:  "lowercase key with prefix",
-			prefix:       "appname_",
-			key:          "host",
-			defaultValue: defaultValue,
-			expected:     appname_host,
-		},
-		{
-			description:  "mixed case of key with prefix",
-			prefix:       "appname_",
-			key:          "HOST",
-			defaultValue: defaultValue,
-			expected:     appname_HOST,
-		},
-		{
-			description:  "UPPERCASE key with prefix",
-			prefix:       "APPNAME_",
-			key:          "HOST",
-			defaultValue: defaultValue,
-			expected:     APPNAME_HOST,
-		},
+	config := struct {
+		Host  string
+		Port  int
+		Debug bool
+		Quit  bool
+	}{}
+
+	// function actually being tested
+	LoadFromEnv(env, &config)
+
+	if config.Host != expectedHost {
+		t.Errorf("Host was incorrect: got %s, expected %s", config.Host, expectedHost)
 	}
 
-	for _, test := range tests {
-		t.Log(test.description)
-
-		// this is the actual API
-		var actual string
-		StringVar(&actual, test.key, test.defaultValue)
-
-		if actual != "" {
-			t.Errorf("values should not be defined until parse is called: value was %q", actual)
-		}
-
-		// wrap the testing env in a PrefixEnv
-
-		env := &PrefixEnv{prefix: test.prefix, Env: &ParsingEnv{testingEnv}}
-
-		ParseFromEnv(env)
-
-		if actual != test.expected {
-			t.Errorf("Expected key %q to have value %q, but got %q", test.prefix+test.key, test.expected, actual)
-		}
-	}
-}
-
-type IntTest struct {
-	description string
-
-	prefix string
-	key    string
-
-	defaultValue int
-	expected     int
-}
-
-func TestIntVar(t *testing.T) {
-	// create some consts so this will be easier to read
-	const (
-		defaultValue = 13337
-		port         = 9000
-		PORT         = 10000
-		appname_port = 1234
-		appname_PORT = 654321
-		APPNAME_PORT = 8675309
-	)
-
-	testingEnv := SimpleEnv{
-		"port":           fmt.Sprintf("%d", port),
-		"PORT":           fmt.Sprintf("%d", PORT),
-		"appname_port":   fmt.Sprintf("%d", appname_port),
-		"appname_PORT":   fmt.Sprintf("%d", appname_PORT),
-		"APPNAME_PORT":   fmt.Sprintf("%d", APPNAME_PORT),
-		"broken_integer": "asdf",
+	if config.Port != expectedPort {
+		t.Errorf("Port was incorrect: got %d, expected %d", config.Port, expectedPort)
 	}
 
-	tests := []IntTest{
-		{
-			description:  "default value when missing",
-			key:          "this_value_does_not_exist",
-			defaultValue: defaultValue,
-			expected:     defaultValue,
-		},
-		{
-			description:  "lowercase env (case sensitive)",
-			key:          "port",
-			defaultValue: defaultValue,
-			expected:     port,
-		},
-		{
-			description:  "uppercase env (case sensitive)",
-			key:          "PORT",
-			defaultValue: defaultValue,
-			expected:     PORT,
-		},
-		{
-			description:  "missing key with prefix",
-			prefix:       "appname_",
-			key:          "not_available",
-			defaultValue: defaultValue,
-			expected:     defaultValue,
-		},
-		{
-			description:  "lowercase key with prefix",
-			prefix:       "appname_",
-			key:          "port",
-			defaultValue: defaultValue,
-			expected:     appname_port,
-		},
-		{
-			description:  "mixed case of key with prefix",
-			prefix:       "appname_",
-			key:          "PORT",
-			defaultValue: defaultValue,
-			expected:     appname_PORT,
-		},
-		{
-			description:  "UPPERCASE key with prefix",
-			prefix:       "APPNAME_",
-			key:          "PORT",
-			defaultValue: defaultValue,
-			expected:     APPNAME_PORT,
-		},
-		{
-			description:  "an unparsable integer",
-			key:          "broken_integer",
-			defaultValue: defaultValue,
-			expected:     defaultValue,
-		},
+	if config.Debug != expectedDebug {
+		t.Errorf("Debug was incorrect: got %v, expected %v", config.Debug, expectedDebug)
 	}
 
-	for _, test := range tests {
-		t.Log(test.description)
-
-		// this is the actual API
-		var actual int
-		IntVar(&actual, test.key, test.defaultValue)
-
-		if actual != 0 {
-			t.Errorf("values should not be defined until parse is called: value was %d", actual)
-		}
-
-		// wrap the testing env in a PrefixEnv
-		env := &PrefixEnv{prefix: test.prefix, Env: &ParsingEnv{testingEnv}}
-
-		ParseFromEnv(env)
-
-		if actual != test.expected {
-			t.Errorf("Expected key %q to have value %d, but got %d", test.prefix+test.key, test.expected, actual)
-		}
-	}
-}
-
-type BoolTest struct {
-	description string
-
-	prefix string
-	key    string
-
-	defaultValue bool
-	expected     bool
-}
-
-func TestBoolVar(t *testing.T) {
-	const (
-		debug         = true
-		DEBUG         = true
-		appname_debug = true
-	)
-
-	testingEnv := SimpleEnv{
-		"debug":            fmt.Sprintf("%v", debug),
-		"DEBUG":            fmt.Sprintf("%v", DEBUG),
-		"appname_debug":    fmt.Sprintf("%v", appname_debug),
-		"falsy_value":      "false",
-		"unparsable_value": "moo",
+	if config.Quit != expectedQuit {
+		t.Errorf("Quit was incorrect: got %v, expected %v", config.Quit, expectedQuit)
 	}
 
-	tests := []BoolTest{
-		{
-			description:  "default value when missing: false",
-			key:          "this_value_does_not_exist",
-			defaultValue: false,
-			expected:     false,
-		},
-		{
-			description:  "default value when missing: true",
-			key:          "this_value_does_not_exist",
-			defaultValue: true,
-			expected:     true,
-		},
-		{
-			description:  "lowercase env (case sensitive)",
-			key:          "debug",
-			defaultValue: false,
-			expected:     debug,
-		},
-		{
-			description:  "uppercase env (case sensitive)",
-			key:          "DEBUG",
-			defaultValue: false,
-			expected:     DEBUG,
-		},
-		{
-			description:  "missing key with prefix",
-			prefix:       "appname_",
-			key:          "not_available",
-			defaultValue: true,
-			expected:     true,
-		},
-	}
-
-	for _, test := range tests {
-		t.Log(test.description)
-
-		// this is the actual API
-		var actual bool
-		BoolVar(&actual, test.key, test.defaultValue)
-
-		if actual != false {
-			t.Errorf("values should not be defined until parse is called: value was %v", actual)
-		}
-
-		// wrap the testing env in a PrefixEnv
-		env := &PrefixEnv{prefix: test.prefix, Env: &ParsingEnv{testingEnv}}
-
-		ParseFromEnv(env)
-
-		if actual != test.expected {
-			t.Errorf("Expected key %q to have value %v, but got %v", test.prefix+test.key, test.expected, actual)
-		}
-	}
-
+	t.Logf("config: %+v", config)
 }
