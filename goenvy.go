@@ -1,4 +1,4 @@
-package goenvy
+package envy
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ var (
 	ErrConfigBorked      = errors.New("try actually givng a fuck")
 )
 
-var logger = log.New(os.Stdout, "[goenvy] ", log.LstdFlags|log.Lshortfile)
+var logger = log.New(os.Stderr, "[goenvy] ", log.LstdFlags|log.Lshortfile)
 
 // interface that reads config from somewhere
 type EnvironmentReader interface {
@@ -39,37 +39,40 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 
 	typeOfSpec := s.Type()
 	for i := 0; i < s.NumField(); i++ {
-		f := s.Field(i)
-		if f.CanSet() {
-			fieldName := typeOfSpec.Field(i).Name
+		fieldValue := s.Field(i)
+		fieldType := typeOfSpec.Field(i)
+		if fieldValue.CanSet() {
+			fieldName := fieldType.Name
 			key := strings.ToUpper(fieldName)
+
+			example := fieldType.Tag.Get("example")
 
 			// retrieve the value from the source, UPCASED
 			value, ok := source[key]
 			if !ok {
-				logger.Printf("Config not found: key=%s", key)
+				logger.Printf("Config not found: key=%s; example=\"%s=%v\"", key, key, example)
 				hazFailure = true
 				continue
 			}
 
 			// populate the struct values based on what type it is
-			switch f.Kind() {
+			switch fieldValue.Kind() {
 			case reflect.String:
-				f.SetString(value)
+				fieldValue.SetString(value)
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				intValue, err := strconv.Atoi(value)
 				if err != nil {
-					logger.Printf("invalid value for int name=%s, value=%s", key, value)
+					logger.Printf("invalid value for int name=%s, value=%s; example=\"%s=%v\"", key, value, key, example)
 					hazFailure = true
 				}
-				f.SetInt(int64(intValue))
+				fieldValue.SetInt(int64(intValue))
 			case reflect.Bool:
 				boolValue, err := strconv.ParseBool(value)
 				if err != nil {
-					logger.Printf("invalid value for bool name=%s, value=%s", key, value)
+					logger.Printf("invalid value for bool name=%s, value=%s; example=\"%s=%v\"", key, value, key, example)
 					hazFailure = true
 				}
-				f.SetBool(boolValue)
+				fieldValue.SetBool(boolValue)
 			}
 		}
 	}

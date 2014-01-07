@@ -1,4 +1,4 @@
-package goenvy
+package envy
 
 import (
 	"fmt"
