@@ -10,31 +10,42 @@ import (
 )
 
 var (
+	// Error used when an invalid reference is provided to the Load function
 	ErrInvalidConfigType = errors.New("give me a struct")
-	ErrConfigBorked      = errors.New("try actually givng a fuck")
+
+	// Basic config error
+	ErrConfigInvalid = errors.New("config is invalid")
 )
 
 var logger = log.New(os.Stderr, "[goenvy] ", log.LstdFlags|log.Lshortfile)
 
 // interface that reads config from somewhere
 type EnvironmentReader interface {
+	// Method reads the environment from the source
+	//
+	// Returns: map[string]string of environment keys to values
 	Read() map[string]string
 }
 
-func Load(spec interface{}) {
-	// LoadFromEnv(os)
+// Loads directly from the environment
+func Load(spec interface{}) error {
 	osEnv := &OsEnvironmentReader{}
-	Load(osEnv)
+	return Load(osEnv)
 }
 
+// Loads config from the provided EnvironmentReader
 func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 	source := reader.Read()
 
+	// Find the value of the provided configSpec
+	// It must be a struct of some kind in order for the values
+	// to be set.
 	s := reflect.ValueOf(configSpec).Elem()
 	if s.Kind() != reflect.Struct {
 		return ErrInvalidConfigType
 	}
 
+	// assume success by default
 	hazFailure := false
 
 	typeOfSpec := s.Type()
@@ -78,39 +89,23 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 	}
 
 	if hazFailure {
-		return ErrConfigBorked
+		return ErrConfigInvalid
 	}
 
 	return nil
 }
 
+// Default EnvironmentReader
 type OsEnvironmentReader struct{}
 
+// Reads values from the os.Environ slice and returns the result
+// as a map[string]string
 func (o *OsEnvironmentReader) Read() map[string]string {
 	result := make(map[string]string)
 	for _, envVar := range os.Environ() {
 		parts := strings.SplitN(envVar, "=", 2)
 		result[parts[0]] = parts[1]
 	}
-
-	return result
-}
-
-type IniEnvironmentReader struct {
-	filename string
-}
-
-func (i *IniEnvironmentReader) Read() map[string]string {
-	// read file
-
-	result := make(map[string]string)
-
-	// ignore headers
-	// ie [kamta.config]
-
-	// ignore lines that start with "#"
-
-	// split on strings.SplitN(envVar, "=", 2)
 
 	return result
 }
