@@ -12,10 +12,10 @@ import (
 
 var (
 	// Error used when an invalid reference is provided to the Load function
-	ErrInvalidConfigType = errors.New("a struct value is required for loading config")
+	ErrInvalidConfigType = errors.New("A struct reference is required for loading config")
 
 	// Basic config error
-	ErrConfigInvalid = errors.New("config is invalid")
+	ErrConfigInvalid = errors.New("Config is invalid")
 )
 
 var logger = log.New(os.Stderr, "[goenvy] ", log.LstdFlags|log.Lshortfile)
