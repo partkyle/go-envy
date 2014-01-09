@@ -12,7 +12,7 @@ import (
 
 var (
 	// Error used when an invalid reference is provided to the Load function
-	ErrInvalidConfigType = errors.New("give me a struct")
+	ErrInvalidConfigType = errors.New("a struct value is required for loading config")
 
 	// Basic config error
 	ErrConfigInvalid = errors.New("config is invalid")
