@@ -73,7 +73,7 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 			// the other options
 			value, ok := source[key]
 			if !ok {
-				err := fmt.Errorf("Config not found: key=%s; example=\"%s=%v\"", key, key, example)
+				err := fmt.Errorf("Config not found: key=%s; example=%q", key, key, example)
 				errors = append(errors, err)
 				continue
 			}
@@ -85,7 +85,7 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				intValue, err := strconv.Atoi(value)
 				if err != nil {
-					err := fmt.Errorf("invalid value for int name=%s, value=%s; example=\"%s=%v\"", key, value, key, example)
+					err := fmt.Errorf("invalid value for int name=%s, value=%s; example=%q", key, value, key, example)
 					errors = append(errors, err)
 					continue
 				}
@@ -93,7 +93,7 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 			case reflect.Bool:
 				boolValue, err := strconv.ParseBool(value)
 				if err != nil {
-					err := fmt.Errorf("invalid value for bool name=%s, value=%s; example=\"%s=%v\"", key, value, key, example)
+					err := fmt.Errorf("invalid value for bool name=%s, value=%s; example=%q", key, value, key, example)
 					errors = append(errors, err)
 					continue
 				}
