@@ -2,6 +2,7 @@ package envy
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"reflect"
@@ -45,24 +46,35 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 		return ErrInvalidConfigType
 	}
 
-	// assume success by default
-	hazFailure := false
+	// create a list of all errors
+	errors := make([]error, 0)
 
+	// iterate over all fields in the struct
 	typeOfSpec := s.Type()
 	for i := 0; i < s.NumField(); i++ {
+		// reference to the value of the field (used for assignment)
 		fieldValue := s.Field(i)
+		// reference to the type of the field
+		// (used to determine the name and any relevant struct tags)
 		fieldType := typeOfSpec.Field(i)
+
+		// Only uppercase values can be set (limitation of reflection)
 		if fieldValue.CanSet() {
 			fieldName := fieldType.Name
+
+			// always assume uppercase key names
 			key := strings.ToUpper(fieldName)
 
+			// string used for outputting useful error messages
 			example := fieldType.Tag.Get("example")
 
 			// retrieve the value from the source, UPCASED
+			// if this value is not available, track the error and continue with
+			// the other options
 			value, ok := source[key]
 			if !ok {
-				logger.Printf("Config not found: key=%s; example=\"%s=%v\"", key, key, example)
-				hazFailure = true
+				err := fmt.Errorf("Config not found: key=%s; example=\"%s=%v\"", key, key, example)
+				errors = append(errors, err)
 				continue
 			}
 
@@ -73,22 +85,27 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				intValue, err := strconv.Atoi(value)
 				if err != nil {
-					logger.Printf("invalid value for int name=%s, value=%s; example=\"%s=%v\"", key, value, key, example)
-					hazFailure = true
+					err := fmt.Errorf("invalid value for int name=%s, value=%s; example=\"%s=%v\"", key, value, key, example)
+					errors = append(errors, err)
+					continue
 				}
 				fieldValue.SetInt(int64(intValue))
 			case reflect.Bool:
 				boolValue, err := strconv.ParseBool(value)
 				if err != nil {
-					logger.Printf("invalid value for bool name=%s, value=%s; example=\"%s=%v\"", key, value, key, example)
-					hazFailure = true
+					err := fmt.Errorf("invalid value for bool name=%s, value=%s; example=\"%s=%v\"", key, value, key, example)
+					errors = append(errors, err)
+					continue
 				}
 				fieldValue.SetBool(boolValue)
 			}
 		}
 	}
 
-	if hazFailure {
+	if len(errors) > 0 {
+		for _, err := range errors {
+			logger.Println(err)
+		}
 		return ErrConfigInvalid
 	}
 
