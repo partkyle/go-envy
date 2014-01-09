@@ -1,9 +1,10 @@
 package envy
 
+// "examples" are added here to improve the output messages
 type ExampleConfig struct {
-	Host  string
-	Port  int
-	Debug bool
+	Host  string `example:"localhost"`
+	Port  int    `example:"9000"`
+	Debug bool   `example:"false"`
 }
 
 func ExampleConfigWithoutPrefix() {
