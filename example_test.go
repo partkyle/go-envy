@@ -11,7 +11,6 @@ func ExampleConfigWithoutPrefix() {
 	// Env Variables Sample:
 	//
 	// HOST=localhost PORT=9000 DEBUG=false
-	//
 
 	config := ExampleConfig{}
 	Load(&config)
