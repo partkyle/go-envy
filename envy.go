@@ -31,7 +31,13 @@ type EnvironmentReader interface {
 // Loads directly from the environment
 func Load(spec interface{}) error {
 	osEnv := &OsEnvironmentReader{}
-	return Load(osEnv)
+	return LoadFromEnv(osEnv, spec)
+}
+
+// Loads the config using a prefix
+func LoadWithPrefix(prefix string, spec interface{}) error {
+	osEnv := &OsEnvironmentReader{prefix: prefix}
+	return LoadFromEnv(osEnv, spec)
 }
 
 // Loads config from the provided EnvironmentReader
@@ -73,7 +79,7 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 			// the other options
 			value, ok := source[key]
 			if !ok {
-				err := fmt.Errorf("Config not found: key=%s; example=%q", key, key, example)
+				err := fmt.Errorf("Config not found: key=%s; example=%q", key, example)
 				errors = append(errors, err)
 				continue
 			}
@@ -85,7 +91,7 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				intValue, err := strconv.Atoi(value)
 				if err != nil {
-					err := fmt.Errorf("invalid value for int name=%s, value=%s; example=%q", key, value, key, example)
+					err := fmt.Errorf("invalid value for int name=%s, value=%s; example=%q", key, value, example)
 					errors = append(errors, err)
 					continue
 				}
@@ -93,7 +99,7 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 			case reflect.Bool:
 				boolValue, err := strconv.ParseBool(value)
 				if err != nil {
-					err := fmt.Errorf("invalid value for bool name=%s, value=%s; example=%q", key, value, key, example)
+					err := fmt.Errorf("invalid value for bool name=%s, value=%s; example=%q", key, value, example)
 					errors = append(errors, err)
 					continue
 				}
@@ -113,15 +119,24 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 }
 
 // Default EnvironmentReader
-type OsEnvironmentReader struct{}
+// Reads environment with the provided prefix, defaulted to ""
+type OsEnvironmentReader struct {
+	prefix string
+}
 
 // Reads values from the os.Environ slice and returns the result
 // as a map[string]string
 func (o *OsEnvironmentReader) Read() map[string]string {
 	result := make(map[string]string)
 	for _, envVar := range os.Environ() {
-		parts := strings.SplitN(envVar, "=", 2)
-		result[parts[0]] = parts[1]
+		if strings.HasPrefix(envVar, o.prefix) {
+			parts := strings.SplitN(envVar, "=", 2)
+
+			// remove the prefix so we don't have to use it on the provided struct
+			key := strings.TrimPrefix(parts[0], o.prefix)
+			value := parts[1]
+			result[key] = value
+		}
 	}
 
 	return result
