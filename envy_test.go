@@ -18,11 +18,10 @@ func TestConfigFromSimpleEnv(t *testing.T) {
 	expectedQuit := false
 
 	env := TestSimpleEnv{
-		"HOST":     expectedHost,
-		"USERNAME": "mordecai",
-		"PORT":     fmt.Sprintf("%d", expectedPort),
-		"QUIT":     fmt.Sprintf("%v", expectedQuit),
-		"DEBUG":    fmt.Sprintf("%v", expectedDebug),
+		"HOST":  expectedHost,
+		"PORT":  fmt.Sprintf("%d", expectedPort),
+		"QUIT":  fmt.Sprintf("%v", expectedQuit),
+		"DEBUG": fmt.Sprintf("%v", expectedDebug),
 	}
 
 	config := struct {
@@ -33,7 +32,10 @@ func TestConfigFromSimpleEnv(t *testing.T) {
 	}{}
 
 	// function actually being tested
-	LoadFromEnv(env, &config)
+	err := LoadFromEnv(env, &config)
+	if err != nil {
+		t.Errorf("Error loading config: %s", err)
+	}
 
 	if config.Host != expectedHost {
 		t.Errorf("Host was incorrect: got %s, expected %s", config.Host, expectedHost)
@@ -52,4 +54,23 @@ func TestConfigFromSimpleEnv(t *testing.T) {
 	}
 
 	t.Logf("config: %+v", config)
+}
+
+func TestConfigMismatch(t *testing.T) {
+	env := TestSimpleEnv{
+		"HOST": "localhost",
+		"PORT": "1234",
+		"QUIT": "true",
+	}
+
+	config := struct {
+		Host string
+		Port int
+	}{}
+
+	// function actually being tested
+	err := LoadFromEnv(env, &config)
+	if err == nil {
+		t.Errorf("Config should not load due to extra configs passed in")
+	}
 }

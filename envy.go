@@ -57,6 +57,18 @@ func LoadFromEnv(reader EnvironmentReader, configSpec interface{}) error {
 
 	// iterate over all fields in the struct
 	typeOfSpec := s.Type()
+
+	// make sure that we got the right number of configs
+	expectedConfigCount := s.NumField()
+	actualConfigCount := len(source)
+
+	if expectedConfigCount != actualConfigCount {
+		err := fmt.Errorf("Unexpected number of config values. Got %d, expected %d",
+			actualConfigCount, expectedConfigCount)
+		errors = append(errors, err)
+	}
+
+	// reflect on config values and set them to the right types
 	for i := 0; i < s.NumField(); i++ {
 		// reference to the value of the field (used for assignment)
 		fieldValue := s.Field(i)
